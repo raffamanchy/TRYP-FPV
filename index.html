@@ -318,8 +318,8 @@
     <script>
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        // Scaling stick element sizes dynamically if on PC
-        const stickScale = isMobile ? 1.0 : 1.45; // 45% bigger on PC
+        // Scaling stick element sizes dynamically if on PC (reduced scale from 1.45 to 1.2)
+        const stickScale = isMobile ? 1.0 : 1.2; 
         document.getElementById('wrapper-left').style.width = (90 * stickScale) + 'px';
         document.getElementById('wrapper-left').style.height = (90 * stickScale) + 'px';
         document.getElementById('wrapper-right').style.width = (90 * stickScale) + 'px';
