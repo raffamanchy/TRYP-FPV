@@ -197,12 +197,12 @@
             background: transparent;
         }
         .top-btn {
-            background: transparent; color: #ffffff; border: none;
-            width: 36px; height: 36px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; box-shadow: none;
-            font-size: 14px;
+            background: rgba(20, 25, 35, 0.85); color: #ffffff; border: 1.5px solid rgba(255, 255, 255, 0.2);
+            padding: 0 10px; height: 36px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-size: 12px; font-weight: bold; font-family: consolas, sans-serif;
         }
-        .top-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        .top-btn:hover { background: rgba(40, 50, 70, 0.95); }
 
         #top-menu-bar { 
             position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(15px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 10px; z-index: 8; pointer-events: auto; 
@@ -549,6 +549,11 @@
         const CAMERA_UPTILT = 30 * (Math.PI / 180);
         let currentThrottle = 0;
 
+        function cycleFlightMode() {
+            activeMode = (activeMode % 3) + 1;
+            // Optionally print to console or let player feel the change by physics
+        }
+
         const motorBtn = document.getElementById('btn-motor-toggle');
         function toggleMotors() {
             if (!isArmed) {
@@ -575,17 +580,13 @@
             }
         });
 
-        function cycleFlightMode() {
-            activeMode = (activeMode % 3) + 1;
-        }
-
         function startGameSession() {
             if (!gameStarted) {
                 gameStarted = true;
                 document.getElementById('menu-title').innerText = "TRYP FPV";
                 const instructionTextEl = document.getElementById('instruction-text');
                 if(instructionTextEl) {
-                    instructionTextEl.innerHTML = `<b>Ready to Fly</b><br>Use touch sticks or keyboard controls`;
+                    instructionTextEl.innerHTML = `<b>Ready to Fly</b><br>Tap screen anywhere to change mode`;
                 }
                 document.getElementById('btn-start-game').innerText = "RESUME";
             }
@@ -613,6 +614,13 @@
             startGameSession();
         });
 
+        // Tap anywhere on canvas/screen in mobile to change flight mode during gameplay
+        container.addEventListener('click', (e) => {
+            if (isMobile && gameStarted && inst.style.display === 'none') {
+                cycleFlightMode();
+            }
+        });
+
         document.addEventListener('pointerlockchange', () => { 
             if (!isMobile && gameStarted) {
                 const isLocked = (document.pointerLockElement === container);
@@ -629,7 +637,10 @@
             const k = e.key.toLowerCase();
             if (!gameStarted) return;
             if (k === 'm') { toggleMotors(); return; }
-            if (['1','2','3'].includes(k)) { activeMode = parseInt(k); return; }
+            if (['1','2','3'].includes(k)) { 
+                activeMode = parseInt(k); 
+                return; 
+            }
             if (k === 'c') { cameraMode = (cameraMode === "FPV") ? "TPV" : "FPV"; return; }
             if (k in keys) keys[k] = true;
             if (k === 'r') resetDrone();
@@ -659,6 +670,7 @@
 
             pad.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation(); // prevent triggering screen tap
                 if (activeTouchId === null) {
                     const touch = e.changedTouches[0];
                     activeTouchId = touch.identifier;
@@ -668,6 +680,7 @@
 
             pad.addEventListener('touchmove', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     const touch = e.changedTouches[i];
                     if (touch.identifier === activeTouchId) updateStick(touch);
@@ -675,6 +688,7 @@
             }, { passive: false });
 
             function endTouch(e) {
+                e.stopPropagation();
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     if (e.changedTouches[i].identifier === activeTouchId) {
                         activeTouchId = null;
