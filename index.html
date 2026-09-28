@@ -307,8 +307,9 @@
         </div>
 
         <div id="instructions">
-            <div id="menu-content" id="menu-box">
-                <h1 id="menu-title">TRYP FPV</h1>              
+            <div id="menu-content">
+                <h1 id="menu-title">TRYP FPV</h1>
+                <p id="instruction-text"><b>Cinematic World Preview</b><br>Landscape Mode Recommended</p>              
                 <button class="play-btn-pulse" id="btn-start-game">PLAY</button>
             </div>
         </div>
@@ -319,7 +320,10 @@
 
         if (isMobile) {
             document.getElementById('touch-controls').style.display = 'block';
-            document.getElementById('instruction-text').innerHTML = `<b>Cinematic World Preview</b><br>Landscape Mode Recommended`;
+            const instructionTextEl = document.getElementById('instruction-text');
+            if(instructionTextEl) {
+                instructionTextEl.innerHTML = `<b>Cinematic World Preview</b><br>Landscape Mode Recommended`;
+            }
         } else {
             document.getElementById('btn-motor-toggle').style.display = 'none';
             document.getElementById('btn-fullscreen-toggle').style.display = 'none';
@@ -578,9 +582,12 @@
         function startGameSession() {
             if (!gameStarted) {
                 gameStarted = true;
-                document.getElementById('menu-title').innerText = "DJI VIRTUAL FIGHT";
-                document.getElementById('instruction-text').innerHTML = `<b>Ready to Fly</b><br>Use mouse to look, W/S throttle, A/D yaw`;
-                document.getElementById('btn-start-game').innerText = "RESUME / LOCK CURSOR";
+                document.getElementById('menu-title').innerText = "TRYP FPV";
+                const instructionTextEl = document.getElementById('instruction-text');
+                if(instructionTextEl) {
+                    instructionTextEl.innerHTML = `<b>Ready to Fly</b><br>Use touch sticks or keyboard controls`;
+                }
+                document.getElementById('btn-start-game').innerText = "RESUME";
             }
             
             inst.style.opacity = '0';
