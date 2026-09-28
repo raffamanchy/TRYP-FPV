@@ -66,10 +66,10 @@
             font-weight: normal;
         }
 
-        /* RC STICKS OVERLAY - DJI STYLE */
+        /* RC STICKS OVERLAY - DJI STYLE (Lowered position) */
         #rc-sticks-container {
             position: absolute;
-            bottom: 50px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -282,7 +282,7 @@
         <div id="rc-sticks-container">
             <button id="btn-motor-toggle" class="hud-circle-btn" title="Toggle Motor">&#10074;&#10074;</button>
             
-            <div class="stick-box-wrapper">
+            <div class="stick-box-wrapper" id="wrapper-left">
                 <div class="stick-box" id="box-left">
                     <div class="stick-cross-h"></div>
                     <div class="stick-cross-v"></div>
@@ -290,7 +290,7 @@
                 </div>
             </div>
 
-            <div class="stick-box-wrapper">
+            <div class="stick-box-wrapper" id="wrapper-right">
                 <div class="stick-box" id="box-right">
                     <div class="stick-cross-h"></div>
                     <div class="stick-cross-v"></div>
@@ -317,6 +317,19 @@
 
     <script>
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // Scaling stick element sizes dynamically if on PC
+        const stickScale = isMobile ? 1.0 : 1.45; // 45% bigger on PC
+        document.getElementById('wrapper-left').style.width = (90 * stickScale) + 'px';
+        document.getElementById('wrapper-left').style.height = (90 * stickScale) + 'px';
+        document.getElementById('wrapper-right').style.width = (90 * stickScale) + 'px';
+        document.getElementById('wrapper-right').style.height = (90 * stickScale) + 'px';
+
+        const stickBallSize = 15 * stickScale;
+        document.getElementById('stick-left').style.width = stickBallSize + 'px';
+        document.getElementById('stick-left').style.height = stickBallSize + 'px';
+        document.getElementById('stick-right').style.width = stickBallSize + 'px';
+        document.getElementById('stick-right').style.height = stickBallSize + 'px';
 
         if (isMobile) {
             document.getElementById('touch-controls').style.display = 'block';
@@ -551,7 +564,6 @@
 
         function cycleFlightMode() {
             activeMode = (activeMode % 3) + 1;
-            // Optionally print to console or let player feel the change by physics
         }
 
         const motorBtn = document.getElementById('btn-motor-toggle');
@@ -614,7 +626,6 @@
             startGameSession();
         });
 
-        // Tap anywhere on canvas/screen in mobile to change flight mode during gameplay
         container.addEventListener('click', (e) => {
             if (isMobile && gameStarted && inst.style.display === 'none') {
                 cycleFlightMode();
@@ -670,7 +681,7 @@
 
             pad.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                e.stopPropagation(); // prevent triggering screen tap
+                e.stopPropagation();
                 if (activeTouchId === null) {
                     const touch = e.changedTouches[0];
                     activeTouchId = touch.identifier;
@@ -925,7 +936,6 @@
 
             mousePitch = 0; mouseRoll = 0;
 
-            // Update Manual OSD data
             const speedKmh = drone.velocity.length() * 3.6;
             document.getElementById('osd-speed').innerText = speedKmh.toFixed(1);
             document.getElementById('osd-alt').innerText = drone.position.y.toFixed(1) + 'm';
@@ -936,14 +946,16 @@
             const stickRight = document.getElementById('stick-right');
             let leftY, leftX, rightX, rightY;
 
+            const maxPixelOffset = (35 * (isMobile ? 1.0 : stickScale));
             if (isMobile) {
-                leftY = touchLeftValY * 30; leftX = touchLeftValX * 30;
-                rightX = touchRightValX * 30; rightY = touchRightValY * 30;
+                leftY = touchLeftValY * maxPixelOffset; leftX = touchLeftValX * maxPixelOffset;
+                rightX = touchRightValX * maxPixelOffset; rightY = touchRightValY * maxPixelOffset;
             } else {
-                leftY = -(stickyThrottleValue * 2 - 1) * 28; 
-                leftX = (keys.d ? 1 : (keys.a ? -1 : 0)) * 28;
+                leftY = -(stickyThrottleValue * 2 - 1) * maxPixelOffset; 
+                leftX = (keys.d ? 1 : (keys.a ? -1 : 0)) * maxPixelOffset;
                 rawMouseX *= Math.exp(-12.0 * dt); rawMouseY *= Math.exp(-12.0 * dt);
-                rightX = rawMouseX; rightY = rawMouseY;
+                rightX = Math.max(-maxPixelOffset, Math.min(maxPixelOffset, rawMouseX * 1.4));
+                rightY = Math.max(-maxPixelOffset, Math.min(maxPixelOffset, rawMouseY * 1.4));
             }
 
             stickLeft.style.transform = `translate(calc(-50% + ${leftX}px), calc(-50% + ${leftY}px))`;
