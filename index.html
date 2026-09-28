@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title> </title>
+    <title>TRYP FPV</title>
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Raffamanch/DJI-Virtual-Fight/main/PNG.ico">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
@@ -12,120 +12,151 @@
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; overflow: hidden; }
         canvas { width: 100% !important; height: 100% !important; display: block; }
         
-        #osd-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 6; pointer-events: auto; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent; cursor: pointer;
-        }
-        #osd-overlay-canvas { display: block; image-rendering: pixelated; max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: auto; }
-
-        /* Minecraft / daquavismc Keystrokes Overlay Style */
-        #keystrokes-container {
+        /* MANUAL OSD - BOTTOM LEFT */
+        #manual-osd-container {
             position: absolute;
-            top: 60px;
-            right: 20px;
+            bottom: 25px;
+            left: 25px;
             z-index: 15;
             display: flex;
             flex-direction: column;
             gap: 6px;
             pointer-events: none;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-weight: bold;
         }
-        .ks-row {
+        .osd-row {
             display: flex;
+            align-items: center;
             gap: 6px;
-            justify-content: center;
         }
-        .ks-key {
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.55);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
+        .osd-badge {
+            background: rgba(25, 30, 40, 0.85);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
             color: #ffffff;
+            padding: 8px 12px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .osd-icon-box {
+            width: 34px;
+            height: 34px;
+            background: rgba(45, 52, 64, 0.9);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            border-radius: 6px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: background 0.05s ease, transform 0.05s ease, color 0.05s ease, border-color 0.05s ease;
+            font-size: 15px;
         }
-        .ks-key.active {
-            background: rgba(255, 255, 255, 0.95);
-            color: #111111;
-            border-color: #ffffff;
-            transform: scale(0.94);
-            text-shadow: none;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+        .osd-speed-value {
+            font-size: 22px;
+            color: #ffb400;
+            font-family: 'Consolas', monospace;
+            min-width: 95px;
+            text-align: right;
         }
-        .ks-mouse-row .ks-key {
-            width: 78px;
-            height: 48px;
-            font-size: 13px;
-        }
-        .ks-sub {
-            font-size: 10px;
-            margin-top: 2px;
-            opacity: 0.8;
-        }
-        .ks-key.active .ks-sub {
-            color: #222222;
-        }
-        .ks-space {
-            width: 162px;
-            height: 24px;
-        }
-        .ks-space-bar {
-            width: 60px;
-            height: 4px;
-            background: #ffffff;
-            border-radius: 2px;
-            transition: background 0.05s ease;
-        }
-        .ks-key.active .ks-space-bar {
-            background: #111111;
+        .osd-unit {
+            font-size: 12px;
+            color: #cccccc;
+            font-weight: normal;
         }
 
-        /* Hide Keystrokes on Mobile / Small Screens & Touch Devices */
-        @media (max-width: 768px), (pointer: coarse) {
-            #keystrokes-container {
-                display: none !important;
-            }
-        }
-
+        /* RC STICKS OVERLAY - DJI STYLE */
         #rc-sticks-container {
             position: absolute;
-            bottom: 55px;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
             z-index: 12;
             pointer-events: none;
             transition: opacity 0.5s ease;
         }
-        .stick-box {
-            width: 85px;
-            height: 85px;
-            background: rgba(0, 0, 0, 0.45);
-            border-radius: 2px;
+
+        /* Bracket Box Container */
+        .stick-box-wrapper {
             position: relative;
-            overflow: hidden;
+            width: 90px;
+            height: 90px;
             pointer-events: auto;
         }
-        .stick-cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1.5px; background: rgba(255, 255, 255, 0.3); transform: translateY(-50%); }
-        .stick-cross-v { position: absolute; top: 0; left: 50%; width: 1.5px; height: 100%; background: rgba(255, 255, 255, 0.3); transform: translateX(-50%); }
-        .stick-ball {
-            position: absolute; width: 15px; height: 15px; background: #ffffff; border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0px 0px rgba(0,0,0,0.5); z-index: 3;
+
+        /* Top-Left and Top-Right Brackets */
+        .stick-box-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-top: 3.5px solid rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            z-index: 5;
         }
-        .stick-trail {
-            position: absolute; width: 13px; height: 13px; background: rgba(135, 206, 250, 0.753); border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
+
+        /* Bottom-Left and Bottom-Right Brackets */
+        .stick-box-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-bottom: 3.5px solid rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Inner Box + Corner Verticals */
+        .stick-box {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Vertical Lines for Top Corners */
+        .stick-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 16px;
+            border-left: 3.5px solid rgba(255, 255, 255, 0.85);
+            border-right: 3.5px solid rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Vertical Lines for Bottom Corners */
+        .stick-box::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 16px;
+            border-left: 3.5px solid rgba(255, 255, 255, 0.85);
+            border-right: 3.5px solid rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Horizontal & Vertical Crosshairs */
+        .stick-cross-h { 
+            position: absolute; top: 50%; left: 0; width: 100%; height: 1px; 
+            background: rgba(255, 255, 255, 0.6); transform: translateY(-50%); z-index: 1;
+        }
+        .stick-cross-v { 
+            position: absolute; top: 0; left: 50%; width: 1px; height: 100%; 
+            background: rgba(255, 255, 255, 0.6); transform: translateX(-50%); z-index: 1;
+        }
+
+        /* Yellow/Gold Joystick Dot */
+        .stick-ball {
+            position: absolute; width: 15px; height: 15px; 
+            background: #ffb400; 
+            border: 1.5px solid #ffffff;
+            border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px rgba(255, 180, 0, 0.8); z-index: 4;
         }
 
         .hud-circle-btn {
@@ -217,29 +248,24 @@
 <body>
 
     <div id="canvas-container">
-        <!-- Minecraft YouTube Keystrokes UI -->
-        <div id="keystrokes-container">
-            <div class="ks-row">
-                <div class="ks-key" id="ks-w">W</div>
-            </div>
-            <div class="ks-row">
-                <div class="ks-key" id="ks-a">A</div>
-                <div class="ks-key" id="ks-s">S</div>
-                <div class="ks-key" id="ks-d">D</div>
-            </div>
-            <div class="ks-row ks-mouse-row">
-                <div class="ks-key" id="ks-lmb">
-                    LMB
-                    <span class="ks-sub" id="ks-lmb-cps">0 CPS</span>
-                </div>
-                <div class="ks-key" id="ks-rmb">
-                    RMB
-                    <span class="ks-sub" id="ks-rmb-cps">0 CPS</span>
+        <!-- Manual OSD Overlay (Bottom Left) -->
+        <div id="manual-osd-container">
+            <div class="osd-row">
+                <div class="osd-badge" style="padding: 6px 12px;">
+                    <div class="osd-icon-box" style="width: 28px; height: 28px; font-size: 12px;">📐</div>
+                    <span id="osd-angle">25°</span>
                 </div>
             </div>
-            <div class="ks-row">
-                <div class="ks-key ks-space" id="ks-space">
-                    <div class="ks-space-bar"></div>
+            <div class="osd-row">
+                <div class="osd-badge" style="padding: 6px 12px;">
+                    <div class="osd-icon-box" style="width: 28px; height: 28px; font-size: 12px;">⛰️</div>
+                    <span id="osd-alt">59.2m</span>
+                </div>
+            </div>
+            <div class="osd-row">
+                <div class="osd-badge">
+                    <div class="osd-icon-box">🧭</div>
+                    <div class="osd-speed-value"><span id="osd-speed">0.0</span> <span class="osd-unit">km/h</span></div>
                 </div>
             </div>
         </div>
@@ -252,31 +278,24 @@
             <button class="top-btn" id="btn-pause" title="Pause">&#10074;&#10074;</button>
         </div>
 
-        <div id="osd-container">
-            <canvas id="osd-overlay-canvas"></canvas>
-        </div>
-
+        <!-- DJI Overlay Style Stick Containers -->
         <div id="rc-sticks-container">
             <button id="btn-motor-toggle" class="hud-circle-btn" title="Toggle Motor">&#10074;&#10074;</button>
             
-            <div class="stick-box" id="box-left">
-                <div class="stick-cross-h"></div>
-                <div class="stick-cross-v"></div>
-                <div class="stick-trail" style="opacity: 0.1;"></div>
-                <div class="stick-trail" style="opacity: 0.2;"></div>
-                <div class="stick-trail" style="opacity: 0.35;"></div>
-                <div class="stick-trail" style="opacity: 0.5;"></div>
-                <div id="stick-left" class="stick-ball"></div>
+            <div class="stick-box-wrapper">
+                <div class="stick-box" id="box-left">
+                    <div class="stick-cross-h"></div>
+                    <div class="stick-cross-v"></div>
+                    <div id="stick-left" class="stick-ball"></div>
+                </div>
             </div>
 
-            <div class="stick-box" id="box-right">
-                <div class="stick-cross-h"></div>
-                <div class="stick-cross-v"></div>
-                <div class="stick-trail" style="opacity: 0.1;"></div>
-                <div class="stick-trail" style="opacity: 0.2;"></div>
-                <div class="stick-trail" style="opacity: 0.35;"></div>
-                <div class="stick-trail" style="opacity: 0.5;"></div>
-                <div id="stick-right" class="stick-ball"></div>
+            <div class="stick-box-wrapper">
+                <div class="stick-box" id="box-right">
+                    <div class="stick-cross-h"></div>
+                    <div class="stick-cross-v"></div>
+                    <div id="stick-right" class="stick-ball"></div>
+                </div>
             </div>
 
             <button id="btn-fullscreen-toggle" class="hud-circle-btn" title="Lock/Fullscreen">&#128274;</button>
@@ -289,9 +308,9 @@
 
         <div id="instructions">
             <div id="menu-content" id="menu-box">
-                <h1 id="menu-title">DJI VIRTUAL FIGHT</h1>
-                <p id="instruction-text"><b>Cinematic World Preview</b><br>Immersive 3D Flight Simulator Experience</p>
-                <button class="play-btn-pulse" id="btn-start-game">CLICK TO PLAY</button>
+                <h1 id="menu-title">TRYP FPV</h1>
+                <p id="</p>
+                <button class="play-btn-pulse" id="btn-start-game">PLAY</button>
             </div>
         </div>
     </div>
@@ -302,82 +321,10 @@
         if (isMobile) {
             document.getElementById('touch-controls').style.display = 'block';
             document.getElementById('instruction-text').innerHTML = `<b>Cinematic World Preview</b><br>Landscape Mode Recommended`;
-            
-            // Programmatically hide keystrokes on mobile as well
-            const ksContainer = document.getElementById('keystrokes-container');
-            if (ksContainer) ksContainer.style.display = 'none';
         } else {
             document.getElementById('btn-motor-toggle').style.display = 'none';
             document.getElementById('btn-fullscreen-toggle').style.display = 'none';
         }
-
-        const osdCanvas = document.getElementById('osd-overlay-canvas');
-        const oCtx = osdCanvas.getContext('2d', { willReadFrequently: true });
-        const osdImg = new Image();
-        osdImg.src = 'hd.jpeg';
-
-        let nativeImgWidth = 1280;
-        let nativeImgHeight = 720;
-
-        function resizeOSD() {
-            if (osdImg.complete && osdImg.naturalWidth) {
-                nativeImgWidth = osdImg.naturalWidth;
-                nativeImgHeight = osdImg.naturalHeight;
-            }
-            osdCanvas.width = nativeImgWidth;
-            osdCanvas.height = nativeImgHeight;
-            if (osdImg.complete) {
-                renderProcessedOSD();
-            }
-        }
-
-        function renderProcessedOSD() {
-            oCtx.clearRect(0, 0, osdCanvas.width, osdCanvas.height);
-            oCtx.drawImage(osdImg, 0, 0, osdCanvas.width, osdCanvas.height);
-            
-            const imgData = oCtx.getImageData(0, 0, osdCanvas.width, osdCanvas.height);
-            const data = imgData.data;
-            const width = osdCanvas.width;
-            const height = osdCanvas.height;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let r = data[i], g = data[i+1], b = data[i+2];
-                if (r < 55 && g < 55 && b < 55) {
-                    data[i+3] = 0;
-                } else {
-                    let brightness = (r + g + b) / 3;
-                    if (brightness > 60) {
-                        data[i]   = Math.min(255, r * 1.2);
-                        data[i+1] = Math.min(255, g * 1.2);
-                        data[i+2] = Math.min(255, b * 1.2);
-                        data[i+3] = 255;
-                    } else {
-                        data[i+3] = 0;
-                    }
-                }
-            }
-
-            const tempData = new Uint8ClampedArray(data);
-            for (let y = 1; y < height - 1; y++) {
-                for (let x = 1; x < width - 1; x++) {
-                    let idx = (y * width + x) * 4;
-                    if (data[idx + 3] === 0) {
-                        let solidNeighbors = 0;
-                        if (tempData[((y-1) * width + x) * 4 + 3] > 128) solidNeighbors++;
-                        if (tempData[((y+1) * width + x) * 4 + 3] > 128) solidNeighbors++;
-                        if (tempData[(y * width + (x-1)) * 4 + 3] > 128) solidNeighbors++;
-                        if (tempData[(y * width + (x+1)) * 4 + 3] > 128) solidNeighbors++;
-                        if (solidNeighbors === 0) {
-                            data[idx + 3] = 0;
-                        }
-                    }
-                }
-            }
-
-            oCtx.putImageData(imgData, 0, 0);
-        }
-
-        osdImg.onload = () => { resizeOSD(); };
 
         const container = document.getElementById('canvas-container');
         const inst = document.getElementById('instructions');
@@ -402,7 +349,6 @@
             
             renderer.setSize(width, height, true);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
-            resizeOSD();
         }
 
         window.addEventListener('resize', handleResize);
@@ -600,49 +546,6 @@
         const CAMERA_UPTILT = 30 * (Math.PI / 180);
         let currentThrottle = 0;
 
-        // Keystrokes & CPS Tracking
-        const ksElements = {
-            w: document.getElementById('ks-w'),
-            a: document.getElementById('ks-a'),
-            s: document.getElementById('ks-s'),
-            d: document.getElementById('ks-d'),
-            space: document.getElementById('ks-space'),
-            lmb: document.getElementById('ks-lmb'),
-            rmb: document.getElementById('ks-rmb')
-        };
-
-        let lmbClicks = [];
-        let rmbClicks = [];
-
-        function updateCPS() {
-            if (isMobile) return;
-            const now = Date.now();
-            lmbClicks = lmbClicks.filter(t => now - t < 1000);
-            rmbClicks = rmbClicks.filter(t => now - t < 1000);
-            document.getElementById('ks-lmb-cps').innerText = `${lmbClicks.length} CPS`;
-            document.getElementById('ks-rmb-cps').innerText = `${rmbClicks.length} CPS`;
-        }
-
-        window.addEventListener('mousedown', (e) => {
-            if (isMobile) return;
-            if (e.button === 0) {
-                ksElements.lmb.classList.add('active');
-                lmbClicks.push(Date.now());
-            } else if (e.button === 2) {
-                ksElements.rmb.classList.add('active');
-                rmbClicks.push(Date.now());
-            }
-            updateCPS();
-        });
-
-        window.addEventListener('mouseup', (e) => {
-            if (isMobile) return;
-            if (e.button === 0) ksElements.lmb.classList.remove('active');
-            if (e.button === 2) ksElements.rmb.classList.remove('active');
-        });
-
-        window.addEventListener('contextmenu', (e) => e.preventDefault());
-
         const motorBtn = document.getElementById('btn-motor-toggle');
         function toggleMotors() {
             if (!isArmed) {
@@ -672,11 +575,6 @@
         function cycleFlightMode() {
             activeMode = (activeMode % 3) + 1;
         }
-
-        document.getElementById('osd-container').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (gameStarted) cycleFlightMode();
-        });
 
         function startGameSession() {
             if (!gameStarted) {
@@ -723,11 +621,6 @@
 
         document.addEventListener('keydown', (e) => {
             const k = e.key.toLowerCase();
-            if (!isMobile) {
-                if (k in ksElements) ksElements[k].classList.add('active');
-                if (k === ' ') ksElements.space.classList.add('active');
-            }
-
             if (!gameStarted) return;
             if (k === 'm') { toggleMotors(); return; }
             if (['1','2','3'].includes(k)) { activeMode = parseInt(k); return; }
@@ -738,11 +631,6 @@
 
         document.addEventListener('keyup', (e) => {
             const k = e.key.toLowerCase();
-            if (!isMobile) {
-                if (k in ksElements) ksElements[k].classList.remove('active');
-                if (k === ' ') ksElements.space.classList.remove('active');
-            }
-
             if (!gameStarted) return;
             if (k in keys) keys[k] = false;
         });
@@ -885,12 +773,9 @@
         }
 
         const clock = new THREE.Clock();
-        let leftTrailHistory = [];
-        let rightTrailHistory = [];
 
         function animate() {
             requestAnimationFrame(animate);
-            updateCPS();
             let dt = clock.getDelta(); if (dt > 0.1) dt = 0.1;
             const modeCfg = MODES[activeMode];
 
@@ -1020,13 +905,20 @@
 
             mousePitch = 0; mouseRoll = 0;
 
+            // Update Manual OSD data
+            const speedKmh = drone.velocity.length() * 3.6;
+            document.getElementById('osd-speed').innerText = speedKmh.toFixed(1);
+            document.getElementById('osd-alt').innerText = drone.position.y.toFixed(1) + 'm';
+            const tiltAngle = Math.round(Math.abs(drone.euler.x) * (180 / Math.PI));
+            document.getElementById('osd-angle').innerText = tiltAngle + '°';
+
             const stickLeft = document.getElementById('stick-left');
             const stickRight = document.getElementById('stick-right');
             let leftY, leftX, rightX, rightY;
 
             if (isMobile) {
-                leftY = touchLeftValY * 35; leftX = touchLeftValX * 35;
-                rightX = touchRightValX * 35; rightY = touchRightValY * 35;
+                leftY = touchLeftValY * 30; leftX = touchLeftValX * 30;
+                rightX = touchRightValX * 30; rightY = touchRightValY * 30;
             } else {
                 leftY = -(stickyThrottleValue * 2 - 1) * 28; 
                 leftX = (keys.d ? 1 : (keys.a ? -1 : 0)) * 28;
@@ -1036,18 +928,6 @@
 
             stickLeft.style.transform = `translate(calc(-50% + ${leftX}px), calc(-50% + ${leftY}px))`;
             stickRight.style.transform = `translate(calc(-50% + ${rightX}px), calc(-50% + ${rightY}px))`;
-
-            leftTrailHistory.unshift({ x: leftX, y: leftY });
-            rightTrailHistory.unshift({ x: rightX, y: rightY });
-            if (leftTrailHistory.length > 5) leftTrailHistory.pop();
-            if (rightTrailHistory.length > 5) rightTrailHistory.pop();
-
-            document.querySelectorAll('#box-left .stick-trail').forEach((trail, idx) => {
-                if (leftTrailHistory[idx + 1]) trail.style.transform = `translate(calc(-50% + ${leftTrailHistory[idx + 1].x}px), calc(-50% + ${leftTrailHistory[idx + 1].y}px))`;
-            });
-            document.querySelectorAll('#box-right .stick-trail').forEach((trail, idx) => {
-                if (rightTrailHistory[idx + 1]) trail.style.transform = `translate(calc(-50% + ${rightTrailHistory[idx + 1].x}px), calc(-50% + ${rightTrailHistory[idx + 1].y}px))`;
-            });
 
             renderer.render(scene, camera);
         }
